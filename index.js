@@ -2,7 +2,7 @@ const express = require("express")
 const fs = require("fs")
 
 const app = express();
-app.get("/list",(req,res)=>{
+app.get("/",(req,res)=>{
     const fileList = fs.readdir('./svgs',{withFileTypes:true},(err,files)=>{
         if(err){
             console.error("读取出错",err)
@@ -96,6 +96,6 @@ app.get("/icon/:name",(req,res)=>{
    
 
 })
-app.listen(3000,()=>{
-    console.log('Example app listening on port 3000!')
+app.listen(3008,()=>{
+    console.log('Example app listening on port http://localhost:3008!')
 })
