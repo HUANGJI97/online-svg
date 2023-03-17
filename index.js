@@ -100,7 +100,20 @@ app.get("/",(req,res)=>{
    
 
 })
-app.get("/icon/cos/:key",(req,res)=>{
+app.get("/icon-t",(req,res)=>{
+    res.send({
+        a:222,
+        query:req.query,
+        params:req.params
+    })
+})
+app.get("/icon-s/:key",(req,res)=>{
+    res.send({
+        a:111,
+        params:req.params
+    })
+})
+app.get("/icons/:key",(req,res)=>{
     const key = req.params.key
     const {color} = req.query
     console.log("获取到key",`[${key}]`)
