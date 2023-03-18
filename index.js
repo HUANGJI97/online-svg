@@ -6,7 +6,6 @@ var cos = new COS({
     SecretId: process.env.SECRET_ID, // 推荐使用环境变量获取；用户的 SecretId，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。子账号密钥获取可参考https://cloud.tencent.com/document/product/598/37140
     SecretKey: process.env.SECRET_KEY, // 推荐使用环境变量获取；用户的 SecretKey，建议使用子账号密钥，授权遵循最小权限指引，降低使用风险。子账号密钥获取可参考https://cloud.tencent.com/document/product/598/37140
 });
-const app = express();
 function renderIconListPage(icons,color='black',serverPath){
    
    return  `
@@ -47,7 +46,7 @@ function renderIconListPage(icons,color='black',serverPath){
                 return `
                     <div class="icon-item" οnclick="handleIconClick()">
                         <div class="icon-wrapper" style="padding:10px;">
-                            <img src='${serverPath}/icon/cos/${item.name}?color=${color}' />
+                            <img src='${serverPath}/icons/${item.name}?color=${color}' />
                         </div>
                         <div class="icon-name" style="color:#888;font-size:12px">${item.name}</div>
                      </div>    
@@ -67,8 +66,76 @@ function renderIconListPage(icons,color='black',serverPath){
     
     `
 }
+const app = express();
+const router = express.Router();
 
-app.get("/",(req,res)=>{
+router.get("/hello",(req,res)=>{
+    res.send({
+        a:222,
+        query:req.query,
+        params:req.params
+    })
+})
+router.get("/icon-s/:key",(req,res)=>{
+    res.send({
+        a:111,
+        params:req.params
+    })
+})
+router.get("/icons/:key",(req,res)=>{
+    const key = req.params.key
+    const {color} = req.query
+    console.log("获取到key",`[${key}]`)
+    cos.getObject({
+        Bucket: 'svg-icons-1256329911', /* 必须 */
+        Region: 'ap-shanghai',    /* 必须 */
+        Key:key
+    }, function(err, data) {
+        // console.log("打印获取到的对象",data.Body)
+        if(!err){
+            const targetSvg = data.Body.toString('utf-8')
+            let response = targetSvg;
+            if(color){
+                console.log("替换颜色值",color)
+                response= targetSvg.replace(/#.{6}/g,color);
+            }
+            res.set('Content-Type', 'image/svg+xml')
+            res.send(response)
+        }else{
+            res.send({
+                message:'fail',
+                key,
+                err,
+            })
+        }
+    
+    })
+
+})
+router.get("/icon/:name",(req,res)=>{
+    console.log(req.query)
+    const {color} = req.query
+    const {name} = req.params
+    console.log("params",name)
+    try{
+        const targetSvg = fs.readFileSync(`./svgs/${name}`,'utf-8')
+        // console.log("读取svg文件",targetSvg)
+        let response = targetSvg;
+        
+        if(color){
+            console.log("替换颜色值",color)
+            response= targetSvg.replace(/#.{6}/g,color);
+        }
+        res.set('Content-Type', 'image/svg+xml')
+        res.send(response)
+    }catch(e){
+        res.send(e)
+
+    }
+   
+
+})
+router.get("/",(req,res)=>{
     cos.getBucket({
         Bucket: 'svg-icons-1256329911', /* 必须 */
         Region: 'ap-shanghai',    /* 必须 */
@@ -100,72 +167,16 @@ app.get("/",(req,res)=>{
    
 
 })
-app.get("/icon-t",(req,res)=>{
+router.get("*",(req,res)=>{
     res.send({
-        a:222,
+        path:req.path,
         query:req.query,
-        params:req.params
+        params:req.params,
+        message:"捕获未定义路由",
+
     })
 })
-app.get("/icon-s/:key",(req,res)=>{
-    res.send({
-        a:111,
-        params:req.params
-    })
-})
-app.get("/icons/:key",(req,res)=>{
-    const key = req.params.key
-    const {color} = req.query
-    console.log("获取到key",`[${key}]`)
-    cos.getObject({
-        Bucket: 'svg-icons-1256329911', /* 必须 */
-        Region: 'ap-shanghai',    /* 必须 */
-        Key:key
-    }, function(err, data) {
-        // console.log("打印获取到的对象",data.Body)
-        if(!err){
-            const targetSvg = data.Body.toString('utf-8')
-            let response = targetSvg;
-            if(color){
-                console.log("替换颜色值",color)
-                response= targetSvg.replace(/#.{6}/g,color);
-            }
-            res.set('Content-Type', 'image/svg+xml')
-            res.send(response)
-        }else{
-            res.send({
-                message:'fail',
-                key,
-                err,
-            })
-        }
-    
-    })
-
-})
-app.get("/icon/:name",(req,res)=>{
-    console.log(req.query)
-    const {color} = req.query
-    const {name} = req.params
-    console.log("params",name)
-    try{
-        const targetSvg = fs.readFileSync(`./svgs/${name}`,'utf-8')
-        // console.log("读取svg文件",targetSvg)
-        let response = targetSvg;
-        
-        if(color){
-            console.log("替换颜色值",color)
-            response= targetSvg.replace(/#.{6}/g,color);
-        }
-        res.set('Content-Type', 'image/svg+xml')
-        res.send(response)
-    }catch(e){
-        res.send(e)
-
-    }
-   
-
-})
+app.use(router)
 app.listen(3008,()=>{
     console.log('Success! app listening on port http://localhost:3008')
 })
