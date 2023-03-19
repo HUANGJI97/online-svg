@@ -54,7 +54,8 @@ router.post("/add-icon",upload,async (req,res)=>{
     })
 })
 
-router.get("/hello",(req,res)=>{
+router.get("/",(req,res)=>{
+    const isUpload = req.query.upload === 'true'
     cos.getBucket({
         Bucket: 'svg-icons-1256329911', /* 必须 */
         Region: 'ap-shanghai',    /* 必须 */
@@ -63,7 +64,7 @@ router.get("/hello",(req,res)=>{
         console.log('文件列表读取',data)
         const list =  data.Contents.filter(item=>item.Size > 0).map(item=>({name:item.Key}))
         const serverPath = `${req.protocol}://${req.get('host')}`
-        res.render("index",{title:"SvgIcons",icons:list,color:req.query.color,serverPath})
+        res.render("index",{title:"SvgIcons",icons:list,color:req.query.color,serverPath,isUpload})
         // res.send(renderIconListPage(list,req.query.color,serverPath))
     })
   
@@ -122,38 +123,38 @@ router.get("/icon/:name",(req,res)=>{
    
 
 })
-router.get("/",(req,res)=>{
-    cos.getBucket({
-        Bucket: 'svg-icons-1256329911', /* 必须 */
-        Region: 'ap-shanghai',    /* 必须 */
-        Prefix: '',  
-    }, function(err, data) {
-        console.log('文件列表读取',data)
-        const list =  data.Contents.filter(item=>item.Size > 0).map(item=>({name:item.Key}))
-        const serverPath = `${req.protocol}://${req.get('host')}`
-        res.send(renderIconListPage(list,req.query.color,serverPath))
-    })
+// router.get("/",(req,res)=>{
+//     cos.getBucket({
+//         Bucket: 'svg-icons-1256329911', /* 必须 */
+//         Region: 'ap-shanghai',    /* 必须 */
+//         Prefix: '',  
+//     }, function(err, data) {
+//         console.log('文件列表读取',data)
+//         const list =  data.Contents.filter(item=>item.Size > 0).map(item=>({name:item.Key}))
+//         const serverPath = `${req.protocol}://${req.get('host')}`
+//         res.send(renderIconListPage(list,req.query.color,serverPath))
+//     })
    
-    // try{
-    //     const fileList = fs.readdir('./svgs',{withFileTypes:true},(err,files)=>{
-    //         if(err){
-    //             console.error("读取出错",err)
-    //         }else{
+//     // try{
+//     //     const fileList = fs.readdir('./svgs',{withFileTypes:true},(err,files)=>{
+//     //         if(err){
+//     //             console.error("读取出错",err)
+//     //         }else{
                
-    //             const serverPath = `${req.protocol}://${req.get('host')}`
-    //             console.log(serverPath)
-    //             const color = req.query.color || 'black'
+//     //             const serverPath = `${req.protocol}://${req.get('host')}`
+//     //             console.log(serverPath)
+//     //             const color = req.query.color || 'black'
     
-    //             res.send()
-    //         }
-    //     })
-    // }catch(e){
-    //     console.log('服务出错',e)
+//     //             res.send()
+//     //         }
+//     //     })
+//     // }catch(e){
+//     //     console.log('服务出错',e)
        
-    // }
+//     // }
    
 
-})
+// })
 router.get("*",(req,res)=>{
     res.send({
         path:req.path,

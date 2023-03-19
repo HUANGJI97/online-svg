@@ -186,6 +186,7 @@
                     <code contenteditable class="language-typescript" style="border-radius:10px;">type IconNames = <%= namesType %></code>
             </pre>
         </div>
+       <% if(isUpload){ %>
         <div style="margin-top:30px;width: 100%;flex:1;">
             <div> ADD ICON</div>
             <div class="form-wrapper">
@@ -211,6 +212,8 @@
                 </form>
             </div>
         </div>
+       <% } %>
+        
     </div>
     
 </body>
@@ -289,42 +292,64 @@
         return file
 
     }
-    document.querySelector("#addForm").addEventListener("change",async (e)=>{
-       const formItems = Array.from(document.querySelectorAll(".upload-item[name]"));
-       const parentNode = e.target.parentNode
-       const preview =  parentNode.querySelector("img[class='preview']")
-       const value = e.target.value
-       const file  = e.target.files[0]
-       const svgContent = await readSvgContent(file);
-       const newFile = strToFile(svgContent.replace(/fill\s*=\s*["']([^"']*)["']/g,'fill="black"'));
-    //    e.target.value = file2Buffer(newFile)
-       const previewUrl = await file2Url(newFile);
-       preview.src = previewUrl
-       preview.style.display = 'block'
-
-       
-    //    if(file){
-    //         reader.readAsDataURL(file);
-    //    }
-    //    reader.addEventListener("load",()=>{
-    //         console.log("预览文件读取",reader.result)
-    //         preview.src = reader.result
-    //    })
-    //    if(value){
-    //     preview.src=value
-    //    }
-        console.log("表单change",{
-            preview,
-            buffer:await file2Buffer(file),
-            previewUrl,
-            content:await file2Text(file),
-            file,
-            target:e.target,
-            parentNode,
-            value,
-            formItems,e
+    const  addForm  = document.querySelector("#addForm");
+    if(addForm){
+        addForm.addEventListener("change",async (e)=>{
+            const formItems = Array.from(document.querySelectorAll(".upload-item[name]"));
+            const parentNode = e.target.parentNode
+            const preview =  parentNode.querySelector("img[class='preview']")
+            const value = e.target.value
+            const file  = e.target.files[0]
+            const svgContent = await readSvgContent(file);
+            const newFile = strToFile(svgContent.replace(/fill\s*=\s*["']([^"']*)["']/g,'fill="black"'));
+            const previewUrl = await file2Url(newFile);
+            preview.src = previewUrl
+            preview.style.display = 'block'
+            console.log("表单change",{
+                preview,
+                buffer:await file2Buffer(file),
+                previewUrl,
+                content:await file2Text(file),
+                file,
+                target:e.target,
+                parentNode,
+                value,
+                formItems,e
+            })
         })
-    })
+        addForm.addEventListener("submit",async (e)=>{
+            e.preventDefault();
+            // console.log('表单校验',)
+            const icons = Array.from(document.querySelectorAll('.icon-name')).map(item=>item.innerHTML)
+            const items = Array.from(document.querySelector("#addForm").querySelectorAll("input"));
+            for(let item of items){
+                if(!item.value){
+                    Toast.show(`${item.name},不能为空`)
+                    throw `${item.name},不能为空`
+                }
+            }
+            if(icons.includes(iconName.value.trim())){
+                const conf = confirm(`图标[${iconName.value}]已存在 是否覆盖`)
+                if(!conf){
+                    throw "同名图标取消上传"
+                }
+            }
+            console.log("表单提交",{
+                normalIcon:normalIcon.value,
+                twotoneIcon:twotoneIcon.value,
+                fileIcon:fileIcon.value,
+                iconName:iconName.value.trim(),
+                submit:e.target.submit
+
+            })
+            await submitForm();
+            window.location.reload()
+            // e.target.submit()
+
+        })
+
+    }
+   
     async function submitForm(){
         const form = document.querySelector("#addForm")
         return new Promise((resolve,reject)=>{
@@ -345,36 +370,7 @@
         })
 
     }
-    document.querySelector("#addForm").addEventListener("submit",async (e)=>{
-        e.preventDefault();
-        // console.log('表单校验',)
-        const icons = Array.from(document.querySelectorAll('.icon-name')).map(item=>item.innerHTML)
-        const items = Array.from(document.querySelector("#addForm").querySelectorAll("input"));
-        for(let item of items){
-            if(!item.value){
-                Toast.show(`${item.name},不能为空`)
-                throw `${item.name},不能为空`
-            }
-        }
-        if(icons.includes(iconName.value.trim())){
-            const conf = confirm(`图标[${iconName.value}]已存在 是否覆盖`)
-            if(!conf){
-                throw "同名图标取消上传"
-            }
-        }
-        console.log("表单提交",{
-            normalIcon:normalIcon.value,
-            twotoneIcon:twotoneIcon.value,
-            fileIcon:fileIcon.value,
-            iconName:iconName.value.trim(),
-            submit:e.target.submit
 
-        })
-        await submitForm();
-        window.location.reload()
-        // e.target.submit()
-
-    })
     hljs.highlightAll();
 </script>
 
