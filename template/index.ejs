@@ -1,0 +1,381 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+    <!-- and it's easy to individually load additional languages -->
+    <title><%= title %></title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/languages/go.min.js"></script>
+    <style>
+        body {
+            background: #ededed;
+        }
+
+        .icon-wrapper {
+            padding: 10px;
+            width: 30px;
+            display: flex;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 3px 3px 6px #d8d5d5,
+                -3px -3px 6px #ffffff;
+            border-radius: 15px;
+            background-color: #efefef;
+
+        }
+
+        .icon-wrapper:active {
+            box-shadow: inset 3px 3px 6px #d8d5d5, inset -3px -3px 6px #ffffff;
+            color: #666;
+            border-radius: 15px;
+        }
+
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .icon-name {
+            margin-top: 8px;
+        }
+
+        .toast {
+            box-shadow: 3px 3px 6px #d8d5d5,
+                -3px -3px 6px #ffffff;
+            background-color: white;
+            position: fixed;
+            top: 10px;
+            right: 0px;
+            left: 0px;
+            margin: 0px auto;
+            width: fit-content;
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            color: #666;
+            transition: all .5s;
+
+        }
+
+        .toast.show {
+            opacity: 1;
+
+        }
+
+        .toast img {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+
+        }
+
+        .highlight {
+
+            background-color: #333;
+            color: white;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+        }
+
+        .code-wrapper {
+            background-color: #333;
+            width: fit-content;
+            box-sizing: border-box;
+            padding: 16px;
+            border-radius: 10px;
+
+        }
+
+        pre {
+            text-align: left;
+            cursor: pointer;
+        }
+
+        code {
+            white-space: pre-wrap;
+            text-align: left;
+            box-shadow: 3px 3px 6px #d8d5d5,
+
+        }
+        .icons{
+            margin-top:70px;display:grid;grid-template-columns: repeat(9,1fr);gap:24px;text-align:center;flex-wrap:wrap;
+        }
+        input[type="file"] {
+            display: flex;
+            background-color: green;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+
+        }
+        input[type='text']{
+            border-radius: 10px;
+            padding: 10px 10px;
+        }
+        input[type="file" i]{
+            color: red;
+            display: block;
+        }
+        button[type='submit']{
+            border-radius: 10px;
+        }
+        .upload-item{
+            width: 100px;
+            height: 100px;
+            position: relative;
+            display: flex;
+            background-color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .upload-item .preview{
+            width: 50%;
+            height: 50%;
+            /* border-radius: 50%; */
+            /* background: #d8d5d5; */
+            border: none;
+            display: none;
+        }
+        .form-wrapper{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* background-color: red; */
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="toast" class="toast">
+        <img src="${serverPath}/icons/copy-success-twotone.svg?color=blue" />
+        <div id="toast-message"></div>
+
+    </div>
+    <div  class="icons">
+        <%  for(let item of icons){ %>
+            <% const name = item.name.replace(/^(.*)\.svg$/g,'$1'); %>
+                <div class="icon-item" οnclick="handleIconClick()" data-name="${item.name}">
+                    <div class="icon-wrapper" style="padding:10px;">
+                        <img src='<%= `${serverPath}/icons/${item.name}?color=${color || 'black'}` %>' />
+                    </div>
+                    <div class="icon-name" style="color:#888;font-size:12px"><%= name %></div>
+                </div>
+        <% } %>
+    </div>
+    <div style="display:flex;gap:16px; width: 100%;">
+        <div style="margin-top:30px;width: 100%;flex:1;">
+            <div> icons.d.ts</div>
+            <% const namesType = icons.map(item=>`'${item.name.replace(/^(.*)\.svg$/g,'$1')}'`).join(" | ") %>
+            <pre>
+                    <code contenteditable class="language-typescript" style="border-radius:10px;">type IconNames = <%= namesType %></code>
+            </pre>
+        </div>
+        <div style="margin-top:30px;width: 100%;flex:1;">
+            <div> ADD ICON</div>
+            <div class="form-wrapper">
+                <form id="addForm" action="/add-icon" method="post" enctype="multipart/form-data" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap: 10px;" >
+                    <div class="upload-item" name="normal">
+                         <input type="file" name="normal" accept="image/svg+xml" />
+                         <img class="preview" / >
+                         <div class="name">NORMAL</div>
+    
+                    </div>
+                    <div class="upload-item" name="twotone">
+                        <input type="file" name="twotone"  accept="image/svg+xml"/>
+                        <img class="preview" / >
+                        <div class="name">TWOTONE</div>
+                    </div>
+                    <div class="upload-item" name="fill">
+                        <input type="file" name="fill"  accept="image/svg+xml"/>
+                        <img class="preview" / >
+                        <div class="name">FILL</div>
+                    </div>
+                    <input type="text" name="icon-name" placeholder="Icon Name" >
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+</body>
+<script >
+   
+    const Toast = {
+        ele: document.querySelector("#toast"),
+        show(message) {
+            console.log(this)
+            document.querySelector("#toast-message").innerHTML = message
+            this.ele.classList.add('show')
+            setTimeout(() => {
+                this.ele.classList.remove("show")
+            }, 1000)
+
+        }
+    }
+    document.querySelectorAll('.icon-item').forEach(item => {
+        item.onclick = function () {
+            const name = item.getAttribute("data-name").replace(".svg", "")
+            console.log("点击", name, item)
+            const src = item.querySelector('img').src
+            // const name = src.replace(/.*\/(\.*)\\.svg$/g,'$1')
+            navigator.clipboard.writeText(name);
+            Toast.show("复制成功 <b style='margin-left:8px;'>" + name + "</b>")
+        }
+    })
+    const normalIcon =  document.querySelector("input[name='normal']");
+    const twotoneIcon = document.querySelector("input[name='twotone']")
+    const fileIcon = document.querySelector("input[name='fill']")
+    const iconName =  document.querySelector("input[name='icon-name']")
+    function file2Buffer(file){
+        return new Promise((resolve,reject)=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror  = reject;
+            reader.readAsArrayBuffer(file);
+        })
+    }
+    function file2Text(file){
+        return new Promise((resolve,reject)=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror  = reject;
+            reader.readAsText(file);
+        })
+    }
+    function file2Url(file){
+        return new Promise((resolve,reject)=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror  = reject;
+            reader.readAsDataURL(file);
+        })
+    }
+    function readSvgContent(file){
+        return new Promise((resolve,reject)=>{
+            if(file.type !== 'image/svg+xml' ){
+                reject(new Error("不是svg格式"))
+            }
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.onerror  = reject;
+            reader.readAsText(file);
+        })
+    }
+    function strToFile(str){
+        const encoder =  new TextEncoder()
+        const buffer = encoder.encode(str)
+        const blob = new Blob([buffer],{type:"image/svg+xml"});
+        const file = new File([blob],'icon.svg',{type:"image/svg+xml"})
+        console.log("转回file:转buffer",{
+            buffer,blob,file,
+            
+        })
+        return file
+
+    }
+    document.querySelector("#addForm").addEventListener("change",async (e)=>{
+       const formItems = Array.from(document.querySelectorAll(".upload-item[name]"));
+       const parentNode = e.target.parentNode
+       const preview =  parentNode.querySelector("img[class='preview']")
+       const value = e.target.value
+       const file  = e.target.files[0]
+       const svgContent = await readSvgContent(file);
+       const newFile = strToFile(svgContent.replace(/fill\s*=\s*["']([^"']*)["']/g,'fill="black"'));
+    //    e.target.value = file2Buffer(newFile)
+       const previewUrl = await file2Url(newFile);
+       preview.src = previewUrl
+       preview.style.display = 'block'
+
+       
+    //    if(file){
+    //         reader.readAsDataURL(file);
+    //    }
+    //    reader.addEventListener("load",()=>{
+    //         console.log("预览文件读取",reader.result)
+    //         preview.src = reader.result
+    //    })
+    //    if(value){
+    //     preview.src=value
+    //    }
+        console.log("表单change",{
+            preview,
+            buffer:await file2Buffer(file),
+            previewUrl,
+            content:await file2Text(file),
+            file,
+            target:e.target,
+            parentNode,
+            value,
+            formItems,e
+        })
+    })
+    async function submitForm(){
+        const form = document.querySelector("#addForm")
+        return new Promise((resolve,reject)=>{
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                // 处理服务器响应
+                if (xhr.status === 200) {
+                    console.log(xhr.responseText);
+                    resolve(xhr.responseText)
+                } else {
+                    console.error(xhr.statusText);
+                }
+                }
+             };
+             xhr.open("POST",form.action);
+             xhr.send(new FormData(form))
+        })
+
+    }
+    document.querySelector("#addForm").addEventListener("submit",async (e)=>{
+        e.preventDefault();
+        // console.log('表单校验',)
+        const icons = Array.from(document.querySelectorAll('.icon-name')).map(item=>item.innerHTML)
+        const items = Array.from(document.querySelector("#addForm").querySelectorAll("input"));
+        for(let item of items){
+            if(!item.value){
+                Toast.show(`${item.name},不能为空`)
+                throw `${item.name},不能为空`
+            }
+        }
+        if(icons.includes(iconName.value.trim())){
+            const conf = confirm(`图标[${iconName.value}]已存在 是否覆盖`)
+            if(!conf){
+                throw "同名图标取消上传"
+            }
+        }
+        console.log("表单提交",{
+            normalIcon:normalIcon.value,
+            twotoneIcon:twotoneIcon.value,
+            fileIcon:fileIcon.value,
+            iconName:iconName.value.trim(),
+            submit:e.target.submit
+
+        })
+        await submitForm();
+        window.location.reload()
+        // e.target.submit()
+
+    })
+    hljs.highlightAll();
+</script>
+
+</html>
