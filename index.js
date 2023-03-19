@@ -72,8 +72,8 @@ router.get("/",(req,res)=>{
 
 router.get("/icons/:key",(req,res)=>{
     const key = req.params.key
-    const {color} = req.query
-    console.log("获取到key",`[${key}]`)
+    const {color = 'black'} = req.query
+    console.log("loading icon",`[${key}] ${color}`)
     cos.getObject({
         Bucket: 'svg-icons-1256329911', /* 必须 */
         Region: 'ap-shanghai',    /* 必须 */
